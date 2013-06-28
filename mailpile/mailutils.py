@@ -209,6 +209,8 @@ def OpenMailbox(fn):
     return IncrementalMaildir(fn)
   elif os.path.isdir(fn) and os.path.exists(os.path.join(fn, 'db')):
     return IncrementalGmvault(fn)
+  elif os.path.isdir(fn) and 'Library/Mail/' in fn:
+    return IncrementalMailAppDir(fn)
   else:
     return IncrementalMbox(fn)
 
@@ -252,6 +254,46 @@ class IncrementalMaildir(mailbox.Maildir):
 
   def get_file_by_ptr(self, msg_ptr):
     return self.get_file(msg_ptr[3:])
+
+
+def mail_app_message(file):
+  return # rfc822.Message()
+
+
+class IncrementalMailAppDir(IncrementalMaildir):
+  """A mailbox implementation which supports Mail.app message store."""
+
+  editable = False
+
+  def __init__(self, dirname, factory=mail_app_message, create=True):
+    IncrementalMaildir.__init__(self, dirname, factory, create)
+
+    self._paths = { 'db': os.path.join(self._path, 'db') }
+
+    for path in self._paths:
+      for dirpath, dirnames, filenames in os.walk(self._paths[path]):
+        for filename in [f for f in filenames if f.endswith(".emlx")]:
+          self._toc[filename] = os.path.join(dirpath, filename)
+
+  def iterkeys(self):
+
+  def keys(self):
+    return list(self.iterkeys())
+
+  def unparsed(self):
+    return super(IncrementalMailAppDir, self).unparsed()
+
+  def get_msg_ptr(self, idx, i):
+    return # msg_ptr
+
+  def get_file(i):
+    return # file
+
+  def mark_parsed(i):
+    pass
+
+  def save(session):
+    pass
 
 class IncrementalGmvault(IncrementalMaildir):
   """A Gmvault class that supports pickling and a few mailpile specifics."""
